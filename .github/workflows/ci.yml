@@ -43,11 +43,14 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+        working-directory: backend
 
       - name: Build (Release)
         run: dotnet build --configuration Release --no-restore
+        working-directory: backend
 
       - name: Run all tests
+        working-directory: backend
         env:
           # Make your tests pick up this connection string via
           # IConfiguration or Environment.GetEnvironmentVariable(...)
