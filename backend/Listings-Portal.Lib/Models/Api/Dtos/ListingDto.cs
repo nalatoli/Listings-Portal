@@ -26,7 +26,6 @@ namespace Listings_Portal.Lib.Models.Api.Dtos
     /// <param name="Price"> Property price (i.e. 899000). </param>
     /// <param name="ListingType"> Listing type (i.e. Standard). </param>
     /// <param name="ListedDate"> Listed date (i.e. "2024-09-18T00:00:00.000Z"). </param>
-    /// <param name="DaysOnMarket"> Number of days listing has been on market (i.e. 90). </param>
     /// <param name="MlsName"> Listing's MLS name (i.e. "CentralTexas").  </param>
     /// <param name="MlsNumber"> Listing's MLS number (i.e. "556965"). </param>
     /// <param name="ListingAgent"> Listing's agent. </param>
@@ -51,8 +50,7 @@ namespace Listings_Portal.Lib.Models.Api.Dtos
         HoaDto? Hoa, 
         long Price, 
         string ListingType, 
-        DateTime ListedDate, 
-        long DaysOnMarket, 
+        DateTime ListedDate,
         string? MlsName, 
         string? MlsNumber, 
         RealtorDto? ListingAgent,
@@ -86,7 +84,6 @@ namespace Listings_Portal.Lib.Models.Api.Dtos
                 Price: entityModel.Price,
                 ListingType: entityModel.ListingType,
                 ListedDate: entityModel.ListedDate,
-                DaysOnMarket: entityModel.DaysOnMarket,
                 MlsName: entityModel.MlsName,
                 MlsNumber: entityModel.MlsNumber,
                 ListingAgent: RealtorDto.FromEntity(entityModel.ListingAgent),

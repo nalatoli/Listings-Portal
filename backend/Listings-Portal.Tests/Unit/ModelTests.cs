@@ -17,7 +17,8 @@ namespace Listings_Portal.Tests.Unit
                 .Excluding(r => r.Guid)
                 .Excluding(r => r.Type)
                 .Excluding(r => r.Location)
-                .Excluding(r => r.Hoa!.Id));
+                .Excluding(r => r.Hoa!.Listing)
+                .Excluding(r => r.Hoa!.ListingId));
             result.Guid.Should().Be(data.Id);
             result.Location.Y.Should().Be(data.Latitude);
             result.Location.X.Should().Be(data.Longitude);
@@ -32,10 +33,13 @@ namespace Listings_Portal.Tests.Unit
                 .Excluding(d => d.Guid)
                 .Excluding(d => d.Type)
                 .Excluding(d => d.Location)
-                .Excluding(d => d.Hoa!.Id)
                 .Excluding(d => d.Status)
-                .Excluding(d => d.ListingAgent!.Id)
-                .Excluding(d => d.ListingOffice!.Id));
+                .Excluding(d => d.Hoa!.Listing)
+                .Excluding(d => d.Hoa!.ListingId)
+                .Excluding(d => d.ListingAgent!.Listing)
+                .Excluding(d => d.ListingAgent!.ListingId)
+                .Excluding(d => d.ListingOffice!.Listing)
+                .Excluding(d => d.ListingOffice!.ListingId));
             data.Location.X.Should().Be(result.Latitude);
             data.Location.Y.Should().Be(result.Longitude);
         }
@@ -54,24 +58,26 @@ namespace Listings_Portal.Tests.Unit
             var data = SampleData.CreateHoa();
             var result = HoaDto.FromEntity(data);
             result.Should().BeEquivalentTo(data, options => options
-                .Excluding(d => d.Id));
+                .Excluding(r => r.Listing)
+                .Excluding(r => r.ListingId));
         }
 
         [Fact]
         public void Realtor_Cloud_To_Entity_Should_Map()
         {
             var data = SampleData.CreateRealtorCloud();
-            var result = Realtor.FromCloud(data);
+            var result = RealtorAgent.FromCloud(data);
             result.Should().BeEquivalentTo(data);
         }
 
         [Fact]
         public void Realtor_Entity_To_Dto_Should_Map()
         {
-            var data = SampleData.CreateRealtor();
+            var data = SampleData.CreateRealtorAgent();
             var result = RealtorDto.FromEntity(data);
-            result.Should().BeEquivalentTo(data, options => options
-                .Excluding(d => d.Id));
+            result.Should().BeEquivalentTo(data, options =>  options
+                .Excluding(r => r.Listing)
+                .Excluding(r => r.ListingId));
         }
     }
 }

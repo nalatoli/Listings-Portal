@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace Listings_Portal.Lib.Tools.Cloud.RentCast
 {
@@ -8,6 +9,7 @@ namespace Listings_Portal.Lib.Tools.Cloud.RentCast
         Sale
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum PropertyType
     {
         [Description("Single Family")]

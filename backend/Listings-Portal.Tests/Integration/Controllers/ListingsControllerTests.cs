@@ -57,9 +57,8 @@ namespace Listings_Portal.Tests.Integration.Controllers
             var insideSale = SampleData.CreateListingFaker(ListingType.Sale, lat, lon, 5).Generate(20);
 
             await dbContext.SeedAsync(insideRent, outsideRent, insideSale);
-            var pee = dbContext.Listings.Select(r => EF.Functions.Distance(new Point(lon, lat), r.Location, false) / 1609.344).Where(d => d < 5).ToArray();
 
-            var resp = await client.GetFromJsonAsync<PagedResponse<ListingDto>>(GetUrl($"?" +
+            var resp = await client.GetFromJsonAsync<PagedResponse<ListingDto>>(GetUrl($"/range?" +
                 $"type={ListingType.Rent}&" +
                 $"latitude={lat}&" +
                 $"longitude={lon}&" +

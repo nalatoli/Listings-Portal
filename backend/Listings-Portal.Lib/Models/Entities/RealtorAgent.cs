@@ -3,22 +3,27 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Listings_Portal.Lib.Models.Entities
 {
-    /// <summary> Realtor model. </summary>
-    public class Realtor : RealtorCloud
+    /// <summary> Realtor agent model. </summary>
+    public class RealtorAgent : RealtorCloud
     {
         /// <summary>
-        /// Realtor ID.
+        /// Parent listing ID.
         /// </summary>
-        public int Id { get; set; }
+        public int ListingId { get; set; }
+
+        /// <summary>
+        /// Parent listing.
+        /// </summary>
+        public Listing? Listing { get; set; }
 
         /// <summary>
         /// Gets realtor model.
         /// </summary>
         /// <param name="cloudModel"> Cloud model. </param>
         /// <returns> Realtor DB model. </returns>
-        public static Realtor? FromCloud(RealtorCloud? cloudModel)
+        public static RealtorAgent? FromCloud(RealtorCloud? cloudModel)
         {
-            return cloudModel == null ? null : new Realtor()
+            return cloudModel == null ? null : new RealtorAgent()
             {
                 Name = cloudModel.Name,
                 Phone = cloudModel.Phone,

@@ -17,7 +17,21 @@ namespace Listings_Portal.Lib.Models.Api.Dtos
         /// </summary>
         /// <param name="entityModel"> Entity model. </param>
         /// <returns> Realtor DTO  model. </returns>
-        public static RealtorDto? FromEntity(Realtor? entityModel)
+        public static RealtorDto? FromEntity(RealtorAgent? entityModel)
+        {
+            return entityModel == null ? null : new RealtorDto(
+                entityModel.Name,
+                entityModel.Phone,
+                entityModel.Email,
+                entityModel.Website);
+        }
+
+        /// <summary>
+        /// Gets Realtor DTO model.
+        /// </summary>
+        /// <param name="entityModel"> Entity model. </param>
+        /// <returns> Realtor DTO  model. </returns>
+        public static RealtorDto? FromEntity(RealtorOffice? entityModel)
         {
             return entityModel == null ? null : new RealtorDto(
                 entityModel.Name,

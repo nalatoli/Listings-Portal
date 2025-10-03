@@ -1,9 +1,14 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Listings_Portal.BackgroundServices;
+using Listings_Portal.Lib.Models.Api;
 using Listings_Portal.Middleware;
 using Listings_Portal.Tools;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Npgsql;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -21,6 +26,17 @@ public partial class Program
         builder.Services.AddDbContext<ListingsDbContext>(options => options.UseNpgsql(
             Environment.GetEnvironmentVariable("LISTINGS_DB_CON"),
             x => x.UseNetTopologySuite()));
+        builder.Services.AddHangfire(cfg => cfg
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(options => options.UseNpgsqlConnection($"{Environment.GetEnvironmentVariable("LISTINGS_DB_CON")}_hf")));
+        builder.Services.AddHangfireServer();
+        builder.Services.AddTransient<PullBackgroundService>();
+
+        /* Get app settings for DI */
+        builder.Services.Configure<SearchOptions>(
+            builder.Configuration.GetSection("SearchOptions"));
 
         /* Add all MVC controllers */
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
@@ -75,6 +91,17 @@ public partial class Program
 
         /* Map all controllers and require the default authorization policy */
         app.MapControllers();
+
+        /* Map job */
+        using (var scope = app.Services.CreateScope())
+        {
+            scope.ServiceProvider.GetRequiredService<IRecurringJobManager>().AddOrUpdate<PullBackgroundService>(
+                "pull-daily",
+                s => s.RunAsync(JobCancellationToken.Null),
+                app.Configuration["Hangfire:PullCron"],
+                new RecurringJobOptions() { TimeZone = TimeZoneInfo.FindSystemTimeZoneById(app.Configuration["Hangfire:PullTimeZone"]!) }
+            );
+        }
 
         /* Start app and wait until its shutdown */
         await app.RunAsync();

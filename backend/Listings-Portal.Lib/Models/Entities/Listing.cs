@@ -116,11 +116,6 @@ namespace Listings_Portal.Lib.Models.Entities
         /// </summary>
         public required DateTime ListedDate { get; set; }
 
-        /// <summary>
-        /// Number of days listing has been on market (i.e. 90).
-        /// </summary>
-        public required long DaysOnMarket { get; set; }
-
         /// <summary> 
         /// Listing's MLS name (i.e. "CentralTexas"). 
         /// </summary>
@@ -134,12 +129,12 @@ namespace Listings_Portal.Lib.Models.Entities
         /// <summary> 
         /// Listing's agent. 
         /// </summary>
-        public required Realtor? ListingAgent { get; set; }
+        public required RealtorAgent? ListingAgent { get; set; }
 
         /// <summary> 
         /// Listing's office. 
         /// </summary>
-        public required Realtor? ListingOffice { get; set; }
+        public required RealtorOffice? ListingOffice { get; set; }
 
         /// <summary>
         /// Gets listing model.
@@ -170,11 +165,10 @@ namespace Listings_Portal.Lib.Models.Entities
                 Price = cloudModel.Price,
                 ListingType = cloudModel.ListingType,
                 ListedDate = cloudModel.ListedDate,
-                DaysOnMarket = cloudModel.DaysOnMarket,
                 MlsName = cloudModel.MlsName,
                 MlsNumber = cloudModel.MlsNumber,
-                ListingAgent = Realtor.FromCloud(cloudModel.ListingAgent),
-                ListingOffice = Realtor.FromCloud(cloudModel.ListingOffice),
+                ListingAgent = RealtorAgent.FromCloud(cloudModel.ListingAgent),
+                ListingOffice = RealtorOffice.FromCloud(cloudModel.ListingOffice),
             };
         }
 

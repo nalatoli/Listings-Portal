@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Listings_Portal.Migrations
 {
     [DbContext(typeof(ListingsDbContext))]
-    [Migration("20250713031247_Initial")]
+    [Migration("20251003181446_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -29,16 +29,13 @@ namespace Listings_Portal.Migrations
 
             modelBuilder.Entity("Listings_Portal.Lib.Models.Entities.Hoa", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("ListingId")
                         .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Fee")
                         .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("ListingId");
 
                     b.ToTable("Hoa");
                 });
@@ -72,24 +69,12 @@ namespace Listings_Portal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long>("DaysOnMarket")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Guid")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("HoaId")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("ListedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ListingAgentId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ListingOfficeId")
-                        .HasColumnType("integer");
 
                     b.Property<string>("ListingType")
                         .IsRequired()
@@ -138,22 +123,16 @@ namespace Listings_Portal.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("HoaId");
-
-                    b.HasIndex("ListingAgentId");
-
-                    b.HasIndex("ListingOfficeId");
+                    b.HasIndex("Guid")
+                        .IsUnique();
 
                     b.ToTable("Listings");
                 });
 
-            modelBuilder.Entity("Listings_Portal.Lib.Models.Entities.Realtor", b =>
+            modelBuilder.Entity("Listings_Portal.Lib.Models.Entities.RealtorAgent", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("ListingId")
                         .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .HasColumnType("text");
@@ -168,25 +147,69 @@ namespace Listings_Portal.Migrations
                     b.Property<string>("Website")
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("ListingId");
 
-                    b.ToTable("Realtor");
+                    b.ToTable("RealtorAgent");
+                });
+
+            modelBuilder.Entity("Listings_Portal.Lib.Models.Entities.RealtorOffice", b =>
+                {
+                    b.Property<int>("ListingId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Website")
+                        .HasColumnType("text");
+
+                    b.HasKey("ListingId");
+
+                    b.ToTable("RealtorOffice");
+                });
+
+            modelBuilder.Entity("Listings_Portal.Lib.Models.Entities.Hoa", b =>
+                {
+                    b.HasOne("Listings_Portal.Lib.Models.Entities.Listing", "Listing")
+                        .WithOne("Hoa")
+                        .HasForeignKey("Listings_Portal.Lib.Models.Entities.Hoa", "ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+                });
+
+            modelBuilder.Entity("Listings_Portal.Lib.Models.Entities.RealtorAgent", b =>
+                {
+                    b.HasOne("Listings_Portal.Lib.Models.Entities.Listing", "Listing")
+                        .WithOne("ListingAgent")
+                        .HasForeignKey("Listings_Portal.Lib.Models.Entities.RealtorAgent", "ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+                });
+
+            modelBuilder.Entity("Listings_Portal.Lib.Models.Entities.RealtorOffice", b =>
+                {
+                    b.HasOne("Listings_Portal.Lib.Models.Entities.Listing", "Listing")
+                        .WithOne("ListingOffice")
+                        .HasForeignKey("Listings_Portal.Lib.Models.Entities.RealtorOffice", "ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
                 });
 
             modelBuilder.Entity("Listings_Portal.Lib.Models.Entities.Listing", b =>
                 {
-                    b.HasOne("Listings_Portal.Lib.Models.Entities.Hoa", "Hoa")
-                        .WithMany()
-                        .HasForeignKey("HoaId");
-
-                    b.HasOne("Listings_Portal.Lib.Models.Entities.Realtor", "ListingAgent")
-                        .WithMany()
-                        .HasForeignKey("ListingAgentId");
-
-                    b.HasOne("Listings_Portal.Lib.Models.Entities.Realtor", "ListingOffice")
-                        .WithMany()
-                        .HasForeignKey("ListingOfficeId");
-
                     b.Navigation("Hoa");
 
                     b.Navigation("ListingAgent");

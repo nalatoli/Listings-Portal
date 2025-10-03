@@ -60,7 +60,7 @@ namespace Listings_Portal.Lib.Tools.Cloud
         /// </summary>
         /// <param name="apiKey"> API key in plaintext.</param>
         /// <param name="filename"> Filename for key file. </param>
-        public static void CreateApiKeyFile(string apiKey, string filename)
+        protected static void CreateApiKeyFile(string apiKey, string filename)
         {
             File.WriteAllBytes(Path.Combine(Paths.BinDir, filename), SecurityManager.Encrypt(apiKey));
         }

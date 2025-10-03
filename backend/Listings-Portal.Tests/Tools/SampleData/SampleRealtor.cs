@@ -6,9 +6,9 @@ namespace Listings_Portal.Tests.Tools
 {
     internal partial class SampleData
     {
-        public static Realtor CreateRealtorCloud(Action<Realtor>? configure = null)
+        public static RealtorAgent CreateRealtorCloud(Action<RealtorAgent>? configure = null)
         {
-            return new Realtor
+            return new RealtorAgent
             {
                 Name = "Agent Name",
                 Phone = "1234567890",
@@ -17,11 +17,21 @@ namespace Listings_Portal.Tests.Tools
             }.GetConfigured(configure);
         }
 
-        public static Realtor CreateRealtor(Action<Realtor>? configure = null)
+        public static RealtorAgent CreateRealtorAgent(Action<RealtorAgent>? configure = null)
         {
-            return new Realtor
+            return new RealtorAgent
             {
-                Id = 1,
+                Name = "Agent Name",
+                Phone = "1234567890",
+                Email = "dummyemail@woohoo.com",
+                Website = "www.coobeans.com",
+            }.GetConfigured(configure);
+        }
+
+        public static RealtorOffice CreateRealtorOffice(Action<RealtorOffice>? configure = null)
+        {
+            return new RealtorOffice
+            {
                 Name = "Agent Name",
                 Phone = "1234567890",
                 Email = "dummyemail@woohoo.com",

@@ -1,11 +1,10 @@
 ﻿using Listings_Portal.Lib.Models.Cloud;
 using System.ComponentModel.DataAnnotations;
-using System.Reflection.Metadata;
 
 namespace Listings_Portal.Lib.Models.Entities
 {
-    /// <summary> HOA DB model. </summary>
-    public class Hoa : HoaCloud
+    /// <summary> Realtor office model. </summary>
+    public class RealtorOffice : RealtorCloud
     {
         /// <summary>
         /// Parent listing ID.
@@ -18,15 +17,18 @@ namespace Listings_Portal.Lib.Models.Entities
         public Listing? Listing { get; set; }
 
         /// <summary>
-        /// Gets HOA model.
+        /// Gets realtor model.
         /// </summary>
         /// <param name="cloudModel"> Cloud model. </param>
-        /// <returns> HOA model. </returns>
-        public static Hoa? FromCloud(HoaCloud? cloudModel)
+        /// <returns> Realtor DB model. </returns>
+        public static RealtorOffice? FromCloud(RealtorCloud? cloudModel)
         {
-            return cloudModel == null ? null : new Hoa()
+            return cloudModel == null ? null : new RealtorOffice()
             {
-                Fee = cloudModel.Fee,
+                Name = cloudModel.Name,
+                Phone = cloudModel.Phone,
+                Email = cloudModel.Email,
+                Website = cloudModel.Website,
             };
         }
     }

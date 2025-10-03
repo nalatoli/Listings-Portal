@@ -19,7 +19,6 @@ namespace Listings_Portal.Tests.Tools
         {
             return new Hoa
             {
-                Id = 1,
                 Fee = 50,
             }.GetConfigured(configure);
         }

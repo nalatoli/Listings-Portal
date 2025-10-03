@@ -17,7 +17,38 @@ namespace Listings_Portal.Tools
         {
             modelBuilder.Entity<Listing>()
                 .Property(l => l.Location)
-                .HasColumnType("geometry (Point, 4326)"); 
+                .HasColumnType("geometry (Point, 4326)");
+
+            modelBuilder.Entity<Listing>()
+                .HasIndex(l => l.Guid)
+                .IsUnique();
+
+            modelBuilder.Entity<Hoa>()
+                .HasKey(r => r.ListingId);
+
+            modelBuilder.Entity<RealtorAgent>()
+                .HasKey(r => r.ListingId);
+
+            modelBuilder.Entity<RealtorOffice>()
+                .HasKey(r => r.ListingId);
+
+            modelBuilder.Entity<Listing>()
+                .HasOne(l => l.Hoa)
+                .WithOne(h => h.Listing)
+                .HasForeignKey<Hoa>(h => h.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Listing>()
+                .HasOne(l => l.ListingAgent)
+                .WithOne(r => r.Listing)
+                .HasForeignKey<RealtorAgent>(r => r.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Listing>()
+                .HasOne(l => l.ListingOffice)
+                .WithOne(r => r.Listing)
+                .HasForeignKey<RealtorOffice>(r => r.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 #pragma warning restore CS1591

@@ -63,17 +63,14 @@ namespace Listings_Portal.Tests.Tools
                 Price = 2000,
                 ListingType = "Rent",
                 ListedDate = DateTime.UtcNow,
-                DaysOnMarket = 5,
                 MlsName = "CentralTexas",
                 MlsNumber = "556700",
-                ListingAgent = CreateRealtor(r =>
+                ListingAgent = CreateRealtorAgent(r =>
                 {
-                    r.Id = 1;
                     r.Name = "Cool Agent";
                 }),
-                ListingOffice = CreateRealtor(r =>
+                ListingOffice = CreateRealtorOffice(r =>
                 {
-                    r.Id = 2;
                     r.Name = "Cool Office";
                 }),
             }.GetConfigured(configure);
