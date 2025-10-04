@@ -24,13 +24,13 @@ public partial class Program
 
         /* Add services */
         builder.Services.AddDbContext<ListingsDbContext>(options => options.UseNpgsql(
-            Environment.GetEnvironmentVariable("LISTINGS_DB_CON"),
+            builder.Configuration["ListingsDbConnectionStr"],
             x => x.UseNetTopologySuite()));
         builder.Services.AddHangfire(cfg => cfg
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UsePostgreSqlStorage(options => options.UseNpgsqlConnection($"{Environment.GetEnvironmentVariable("LISTINGS_DB_CON")}_hf")));
+            .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(builder.Configuration["HangfireDbConnectionStr"])));
         builder.Services.AddHangfireServer();
         builder.Services.AddTransient<PullBackgroundService>();
 
@@ -99,6 +99,7 @@ public partial class Program
                 "pull-daily",
                 s => s.RunAsync(JobCancellationToken.Null),
                 app.Configuration["Hangfire:PullCron"],
+                //"*/15 * * * * *",
                 new RecurringJobOptions() { TimeZone = TimeZoneInfo.FindSystemTimeZoneById(app.Configuration["Hangfire:PullTimeZone"]!) }
             );
         }
