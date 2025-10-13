@@ -69,7 +69,16 @@ public partial class Program
         });
 
         /* Build app */
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("CorsPolicy", policy =>
+                policy.WithOrigins(builder.Configuration["AllowedClient"]!)
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+            );
+        });
         var app = builder.Build();
+        app.UseCors("CorsPolicy");
 
         /* Add swagger UI */
         if (app.Environment.IsDevelopment())

@@ -1,0 +1,14 @@
+<!-- house.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    path {
+      fill: #111827;
+    }
+    @media (prefers-color-scheme: dark) {
+      path {
+        fill: white;
+      }
+    }
+  </style>
+  <path d="M32 8 4 32h8v24h16V40h8v16h16V32h8z"></path>
+</svg>

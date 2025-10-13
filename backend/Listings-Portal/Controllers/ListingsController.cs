@@ -19,6 +19,8 @@ namespace Listings_Portal.Controllers
     [ApiController]
     public class ListingsController(ListingsDbContext dbContext) : ControllerBase
     {
+        private readonly TimeZoneInfo nyTz = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+
         /// <summary>
         /// Search rental listings by counties.
         /// </summary>
@@ -53,13 +55,13 @@ namespace Listings_Portal.Controllers
 
             page = Math.Max(page, 1);
             pageSize = Math.Clamp(pageSize, 1, 50);
-            var earliestDate = DateTime.UtcNow.AddDays(-daysOld);
+            var earliestDate = TimeZoneInfo.ConvertTimeToUtc(TimeZoneInfo.ConvertTime(DateTime.UtcNow, nyTz).Date.AddDays(-daysOld), nyTz);
 
             var query = dbContext.Listings.Where(l =>
                 l.Type == type &&
                 (counties == null || counties.Length == 0 || counties.Contains(l.County)) &&
                 (bedrooms <= 0 || l.Bedrooms >= bedrooms) &&
-                (bathrooms <= 0 || l.Bathrooms >= bedrooms) &&
+                (bathrooms <= 0 || l.Bathrooms >= bathrooms) &&
                 (daysOld <= 0 || l.ListedDate >= earliestDate) &&
                 (yearBuilt == 0 || l.YearBuilt >= yearBuilt) &&
                 (squareFootage == 0 || l.SquareFootage >= squareFootage) &&
@@ -121,14 +123,14 @@ namespace Listings_Portal.Controllers
 
             page = Math.Max(page, 1);
             pageSize = Math.Clamp(pageSize, 1, 50);
-            var earliestDate = DateTime.UtcNow.AddDays(-daysOld);
+            var earliestDate = TimeZoneInfo.ConvertTimeToUtc(TimeZoneInfo.ConvertTime(DateTime.UtcNow, nyTz).Date.AddDays(-daysOld), nyTz);
             var location = Listing.GetPoint(longitude, latitude);
             var radiusMeters = radius * 1609.344;
 
             var query = dbContext.Listings.Where(l =>
                 l.Type == type &&
                 (bedrooms <= 0 || l.Bedrooms >= bedrooms) &&
-                (bathrooms <= 0 || l.Bathrooms >= bedrooms) &&
+                (bathrooms <= 0 || l.Bathrooms >= bathrooms) &&
                 (daysOld <= 0 || l.ListedDate >= earliestDate) &&
                 (yearBuilt == 0 || l.YearBuilt >= yearBuilt) &&
                 (squareFootage == 0 || l.SquareFootage >= squareFootage) &&
@@ -143,6 +145,8 @@ namespace Listings_Portal.Controllers
                 .AsNoTracking()
                 .Select(l => GetDtoListing(l))
                 .ToListAsync();
+
+            var poo = DateTime.UtcNow;
 
             return new PagedResponse<ListingDto>
             {
@@ -185,8 +189,8 @@ namespace Listings_Portal.Controllers
                    l.State,
                    l.ZipCode,
                    l.County,
-                   l.Location.X,
                    l.Location.Y,
+                   l.Location.X,
                    l.PropertyType,
                    l.Bedrooms,
                    l.Bathrooms,

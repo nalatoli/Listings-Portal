@@ -1,0 +1,79 @@
+html {
+  color: white;
+}
+
+.result-strip {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  pointer-events: none;
+}
+
+.result-pill {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .result-strip {
+    top: 52px;
+    min-height: 44px;
+  }
+  .result-pill {
+    padding: 8px 16px;
+    font-size: 15px;
+  }
+}
+
+@supports (padding: max(0px)) {
+  .result-strip {
+    margin-top: max(8px, env(safe-area-inset-top));
+  }
+}
+
+.price-label {
+  background: #111827;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  transform: translateY(-28px);
+  white-space: nowrap;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+@media (prefers-color-scheme: light) {
+  html {
+    color: #111827;
+  }
+
+  .price-label {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+  }
+
+  .result-pill {
+    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.288);
+    box-shadow: 0 4px 10px rgba(127, 127, 127, 0.266);
+  }
+}

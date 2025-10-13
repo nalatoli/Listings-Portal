@@ -20,6 +20,11 @@ namespace Listings_Portal.BackgroundServices
             var now = DateTime.UtcNow;
             logger.LogInformation("{DT}: Finding listings with options: {options}", now, Options);
 
+#if DEBUG
+            await Task.CompletedTask;
+
+#else
+
             var newCloudListings = await RentCast.GetRentListingsAsync(
                 propertyTypes: Options.PropertyTypes,
                 latitude: Options.Latitude,
@@ -56,6 +61,8 @@ namespace Listings_Portal.BackgroundServices
             var deleteListings = from row in db.Listings where now - row.ListedDate > maxTimespan select row;
             db.RemoveRange(deleteListings);
             logger.LogInformation("--> State entries written to database: {count}", await db.SaveChangesAsync(jct.ShutdownToken));
+
+#endif
         }
     }
 }
