@@ -159,6 +159,47 @@ function ListingsMap() {
     };
   }, [listingApi, lat, lng, filters]);
 
+  const mapStyles = useMemo(
+    () => (isDark ? nightModeMapStyles : null),
+    [isDark]
+  );
+
+  const markers = useMemo(
+    () =>
+      listings.map((listing) => {
+        const hasYear = listing.yearBuilt !== -1;
+        const hasSqft = listing.squareFootage !== -1;
+        let color = "#cad411";
+        if (hasYear && hasSqft) color = "#EA4335";
+        else if (hasYear || hasSqft) color = "#d49a11";
+
+        return (
+          <Marker
+            key={listing.id}
+            position={{ lat: listing.latitude, lng: listing.longitude }}
+            onClick={handleClick(listing)}
+            label={{
+              text: `$${listing.price}`,
+              fontSize: "12px",
+              color: isDark ? "white" : "#111827",
+              className: "price-label",
+            }}
+            icon={{
+              path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
+              fillColor: color,
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 1,
+              scale: 1.5,
+              anchor: new google.maps.Point(12, 24),
+              labelOrigin: new google.maps.Point(12, 9),
+            }}
+          />
+        );
+      }),
+    [listings, isDark, handleClick]
+  );
+
   return (
     <div>
       <div ref={filterBarRef}>
@@ -172,7 +213,7 @@ function ListingsMap() {
       />
       <Map
         style={{ width: "100vw", height: "100vh" }}
-        styles={isDark ? nightModeMapStyles : null}
+        styles={mapStyles}
         defaultCenter={{
           lat: lat,
           lng: lng,
@@ -181,37 +222,7 @@ function ListingsMap() {
         gestureHandling="greedy"
         disableDefaultUI
       >
-        {listings.map((listing) => {
-          const hasYear = listing.yearBuilt !== -1;
-          const hasSqft = listing.squareFootage !== -1;
-          let color = "#cad411";
-          if (hasYear && hasSqft) color = "#EA4335";
-          else if (hasYear || hasSqft) color = "#d49a11";
-
-          return (
-            <Marker
-              key={listing.id}
-              position={{ lat: listing.latitude, lng: listing.longitude }}
-              onClick={handleClick(listing)}
-              label={{
-                text: `$${listing.price}`,
-                fontSize: "12px",
-                color: isDark ? "white" : "#111827",
-                className: "price-label",
-              }}
-              icon={{
-                path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
-                fillColor: color,
-                fillOpacity: 1,
-                strokeColor: "#ffffff",
-                strokeWeight: 1,
-                scale: 1.5,
-                anchor: new google.maps.Point(12, 24),
-                labelOrigin: new google.maps.Point(12, 9),
-              }}
-            />
-          );
-        })}
+        {markers}
         {selected && (
           <InfoWindow
             pixelOffset={[0, -28]}

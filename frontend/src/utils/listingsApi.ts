@@ -73,15 +73,15 @@ export function useVisibleListingCount(
   const map = useMap();
   const [count, setCount] = useState(0);
 
-  // recompute when map view or listings change
   useEffect(() => {
     if (!map) return;
 
-    const recompute = () => {
+    let timeout: number | null = null;
+
+    const updateCount = () => {
       const bounds = map.getBounds();
       if (!bounds) return;
 
-      // Using LatLngBounds.contains for accuracy
       const c = listings.reduce((acc, x) => {
         const pos = new google.maps.LatLng(x.latitude, x.longitude);
         return acc + (bounds.contains(pos) ? 1 : 0);
@@ -90,14 +90,17 @@ export function useVisibleListingCount(
       setCount(c);
     };
 
-    // initial + on view changes
-    recompute();
-    const idleL = map.addListener("idle", recompute);
-    const zoomL = map.addListener("zoom_changed", recompute);
+    const handleIdle = () => {
+      if (timeout) window.clearTimeout(timeout);
+      timeout = window.setTimeout(updateCount, 100);
+    };
+
+    handleIdle();
+    const idleListener = map.addListener("idle", handleIdle);
 
     return () => {
-      idleL.remove();
-      zoomL.remove();
+      if (timeout) window.clearTimeout(timeout);
+      idleListener.remove();
     };
   }, [map, listings]);
 
