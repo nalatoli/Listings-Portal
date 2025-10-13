@@ -62,6 +62,18 @@ function toNum(v: string | null): number | null {
 
 function parseFiltersFromSearch(search: string): Filters {
   const q = new URLSearchParams(search);
+  const parseCounties = (): string[] | null => {
+    const entries = q.getAll("counties");
+    const list = Array.from(
+      new Set(
+        entries
+          .flatMap((v) => (v ?? "").split(","))
+          .map((s) => s.trim())
+          .filter(Boolean)
+      )
+    );
+    return list.length ? list : DEFAULTS.counties ?? null;
+  };
   return {
     minPrice: q.has("minPrice") ? toNum(q.get("minPrice")) : DEFAULTS.minPrice,
     maxPrice: q.has("maxPrice") ? toNum(q.get("maxPrice")) : DEFAULTS.maxPrice,
@@ -74,6 +86,7 @@ function parseFiltersFromSearch(search: string): Filters {
     maxDaysOld: q.has("maxDaysOld")
       ? toNum(q.get("maxDaysOld"))
       : DEFAULTS.maxDaysOld,
+    counties: parseCounties(),
   };
 }
 
@@ -136,12 +149,7 @@ function ListingsMap() {
     refetch.current = setTimeout(async () => {
       try {
         setLoading(true);
-        const items = await listingApi.getListings(
-          lat,
-          lng,
-          filters,
-          ctrl.signal
-        );
+        const items = await listingApi.getListings(filters, ctrl.signal);
         setListings(items);
       } catch (e) {
         if (!(e instanceof DOMException && e.name === "AbortError")) {

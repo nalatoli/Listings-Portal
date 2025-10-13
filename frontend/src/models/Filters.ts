@@ -4,4 +4,5 @@ export type Filters = {
   minBedrooms?: number | null;
   minBathrooms?: number | null;
   maxDaysOld?: number | null;
+  counties?: string[] | null;
 };

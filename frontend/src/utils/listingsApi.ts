@@ -9,17 +9,12 @@ function getEndpoint(relUrl: string) {
 
 export default function listingsApi() {
   async function fetchListingsPage(
-    lat: number,
-    lng: number,
     filters: Filters,
     page: number,
     pageSize: number,
     signal?: AbortSignal
   ): Promise<ListingSet> {
     const qs = new URLSearchParams({
-      latitude: String(lat),
-      longitude: String(lng),
-      radius: "0",
       page: String(page),
       pageSize: String(pageSize),
     });
@@ -32,25 +27,22 @@ export default function listingsApi() {
       qs.set("bathrooms", String(filters.minBathrooms));
     if (filters.maxDaysOld != null)
       qs.set("daysOld", String(filters.maxDaysOld));
+    if (filters.counties && filters.counties.length > 0)
+      filters.counties.forEach((c) => qs.append("counties", c));
 
-    const resp = await fetch(getEndpoint(`v1/listings/range?${qs}`), {
+    const resp = await fetch(getEndpoint(`v1/listings/counties?${qs}`), {
       signal,
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);
     return ListingSetSchema.parse(await resp.json());
   }
 
-  async function getListings(
-    lat: number,
-    lng: number,
-    filters: Filters,
-    signal?: AbortSignal
-  ) {
+  async function getListings(filters: Filters, signal?: AbortSignal) {
     const items: ListingSet["items"] = [];
     let page = 1;
 
     while (true) {
-      const data = await fetchListingsPage(lat, lng, filters, page, 50, signal);
+      const data = await fetchListingsPage(filters, page, 50, signal);
       if (data.items.length === 0) break;
       items.push(...data.items);
       if (items.length >= data.totalCount) break;
