@@ -36,6 +36,11 @@ namespace Listings_Portal.Lib.Models.Api
         public required double Bathrooms { get; set; }
 
         /// <summary>
+        /// Maximum price of listing (i.e. 5000).
+        /// </summary>
+        public required int MaxPrice { get; set; }
+
+        /// <summary>
         /// Maximum number of days listing has been on market (i.e. 5).
         /// </summary>
         public required int DaysOnMarket { get; set; } = 1;

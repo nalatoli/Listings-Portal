@@ -5,6 +5,7 @@ using Listings_Portal.Lib.Models.Entities;
 using Listings_Portal.Lib.Tools.Cloud.RentCast;
 using Listings_Portal.Tools;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace Listings_Portal.BackgroundServices
@@ -32,6 +33,7 @@ namespace Listings_Portal.BackgroundServices
                 longitude: Options.Longitude,
                 bedrooms: Options.Bedrooms,
                 bathrooms: Options.Bathrooms,
+                maxPrice: Options.MaxPrice,
                 radius: Options.Radius,
                 daysOld: Options.DaysOnMarket,
                 cancellationToken: jct.ShutdownToken);

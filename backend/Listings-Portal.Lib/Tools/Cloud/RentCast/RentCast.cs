@@ -19,6 +19,7 @@ namespace Listings_Portal.Lib.Tools.Cloud.RentCast
         /// <param name="radius"> Radius of search in miles (max 100). </param>
         /// <param name="bedrooms"> Minimum number of bedrooms (0 for studio). </param>
         /// <param name="bathrooms"> Minimum number of bathrooms (0 for studio). </param>
+        /// <param name="maxPrice"> Maximum price of listing (-1 for none). </param>
         /// <param name="daysOld"> Maximum number of days listing was on market (&lt;1 means any). </param>
         /// <param name="cancellationToken"> Optional cancellation token. </param>
         /// <returns> Available rent listings. </returns>
@@ -29,6 +30,7 @@ namespace Listings_Portal.Lib.Tools.Cloud.RentCast
             double radius,
             double bedrooms,
             double bathrooms,
+            int maxPrice,
             int daysOld = 0,
             CancellationToken cancellationToken = default)
         {
@@ -39,8 +41,9 @@ namespace Listings_Portal.Lib.Tools.Cloud.RentCast
                 $"&propertyType={string.Join('|', propertyTypes.Select(p => p.GetDescription()))}" +
                 $"&latitude={latitude}" +
                 $"&longitude={longitude}" +
-                $"&bedrooms={bedrooms}" +
-                $"&bathrooms={bathrooms}" +
+                $"&bedrooms={bedrooms}:*" +
+                $"&bathrooms={bathrooms}:*" +
+                (maxPrice > 0 ? $"&price=*:{maxPrice}" : "") +
                 $"&radius={radius}" +
                 (daysOld >= 1 ? $"&daysOld={daysOld}" : ""),
                 cancellationToken);
