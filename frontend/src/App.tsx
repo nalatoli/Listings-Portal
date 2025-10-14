@@ -51,7 +51,7 @@ const DEFAULTS: Filters = {
   maxPrice: null,
   minBedrooms: null,
   minBathrooms: null,
-  maxDaysOld: null,
+  maxDaysOld: 1,
 };
 
 function toNum(v: string | null): number | null {
