@@ -14,11 +14,12 @@ namespace Listings_Portal.BackgroundServices
         private readonly ILogger<PullBackgroundService> logger = logger;
         private readonly IServiceProvider service = service;
         private SearchOptions Options => searchOptions.CurrentValue;
+        private readonly JsonSerializerOptions serializeOptions = new JsonSerializerOptions() { WriteIndented = true };
 
         public async Task RunAsync(IJobCancellationToken jct)
         {
             var now = DateTime.UtcNow;
-            logger.LogInformation("{DT}: Finding listings with options: {options}", now, Options);
+            logger.LogInformation("{DT}: Finding listings with options:\n{options}", now, JsonSerializer.Serialize(Options, serializeOptions));
 
 #if DEBUG
             await Task.CompletedTask;
