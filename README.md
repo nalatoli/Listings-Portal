@@ -1,4 +1,4 @@
-# Listings‑Portal API
+# Listings‑Portal Web App + API
 
 A modern geospatial Web and API for discovering residential **rent** and **sale** listings in the New York City metro area. It exposes a clean, versioned REST surface backed by PostgreSQL + PostGIS and Entity Framework Core 8. A companion **React** front‑end consumes this API to provide an interactive map experience.
 
