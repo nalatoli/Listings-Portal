@@ -263,3 +263,90 @@
     padding-bottom: max(env(safe-area-inset-bottom), 12px);
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  .zbar {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+
+  .pill > button {
+    background: #1f2937;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+  .pill > button:hover {
+    border-color: #6b7280;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  .pill.active > button {
+    background: #312e81;
+    border-color: #6366f1;
+    color: #e0e7ff;
+  }
+
+  .menu {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .menu.sheet {
+    background: #1f2937;
+  }
+
+  .sheet-header {
+    border-bottom-color: #374151;
+  }
+  .sheet-title {
+    color: #f9fafb;
+  }
+  .sheet-close {
+    color: #9ca3af;
+  }
+
+  .field label {
+    color: #9ca3af;
+  }
+  .field input {
+    background: #111827;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+  .field input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  }
+
+  .chip {
+    background: #111827;
+    border-color: #374151;
+    color: #f9fafb;
+  }
+  .chip:hover {
+    border-color: #6b7280;
+    background: #1f2937;
+  }
+  .chip.selected {
+    background: #312e81;
+    border-color: #6366f1;
+    color: #e0e7ff;
+  }
+
+  .menu-row .sep {
+    color: #9ca3af;
+  }
+
+  .menu-actions .apply {
+    background: #f9fafb;
+    color: #111827;
+  }
+  .menu-actions .link {
+    background: transparent;
+    border-color: #4b5563;
+    color: #d1d5db;
+  }
+
+  .clear-all {
+    color: #9ca3af;
+  }
+}
