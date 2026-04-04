@@ -23,7 +23,7 @@ namespace Listings_Portal.BackgroundServices
             var now = DateTime.UtcNow;
             logger.LogInformation("{DT}: Finding listings with options:\n{options}", now, JsonSerializer.Serialize(Options, serializeOptions));
 
-#if !DEBUG
+#if DEBUG
             await Task.CompletedTask;
 
 #else
