@@ -41,6 +41,11 @@ namespace Listings_Portal.Lib.Models.Api
         public required int MaxPrice { get; set; }
 
         /// <summary>
+        /// Maximum number of listings to return (i.e. 500).
+        /// </summary>
+        public required int Limit { get; set; } = 500;
+
+        /// <summary>
         /// Maximum number of days listing has been on market (i.e. 5).
         /// </summary>
         public required int DaysOnMarket { get; set; } = 1;

@@ -33,7 +33,11 @@ namespace Listings_Portal.Lib.Tools.Cloud
             //return client.SendAsync(new HttpRequestMessage(method, resource), cancellationToken);
 
             var resource = $"{endpoint}{(string.IsNullOrEmpty(query) ? "" : $"?{query}")}";
-            using var request = new HttpRequestMessage(method, resource);
+            using var request = new HttpRequestMessage(method, resource)
+            {
+                Version = HttpVersion.Version11,
+                VersionPolicy = HttpVersionPolicy.RequestVersionExact
+            };
 
             var sw = Stopwatch.StartNew();
 

@@ -35,7 +35,9 @@ public partial class Program
         {
             PooledConnectionLifetime = TimeSpan.FromMinutes(2),
             PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            //AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            AllowAutoRedirect = false,
+            AutomaticDecompression = DecompressionMethods.None
         });
 
         /* Add services */

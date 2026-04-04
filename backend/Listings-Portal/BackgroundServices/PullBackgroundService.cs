@@ -36,6 +36,7 @@ namespace Listings_Portal.BackgroundServices
                 bathrooms: Options.Bathrooms,
                 maxPrice: Options.MaxPrice,
                 radius: Options.Radius,
+                limit: Options.Limit,
                 daysOld: Options.DaysOnMarket,
                 cancellationToken: jct.ShutdownToken);
             logger.LogInformation("--> Fetched {count} new cloud listings", newCloudListings.Length);
