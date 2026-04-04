@@ -1,7 +1,6 @@
 ﻿using Listings_Portal.Lib.Tools.Managers;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Net;
 using System.Net.Http.Json;
 
 namespace Listings_Portal.Lib.Tools.Cloud
@@ -33,11 +32,7 @@ namespace Listings_Portal.Lib.Tools.Cloud
             //return client.SendAsync(new HttpRequestMessage(method, resource), cancellationToken);
 
             var resource = $"{endpoint}{(string.IsNullOrEmpty(query) ? "" : $"?{query}")}";
-            using var request = new HttpRequestMessage(method, resource)
-            {
-                Version = HttpVersion.Version11,
-                VersionPolicy = HttpVersionPolicy.RequestVersionExact
-            };
+            using var request = new HttpRequestMessage(method, resource);
 
             var sw = Stopwatch.StartNew();
 
