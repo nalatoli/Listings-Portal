@@ -18,6 +18,7 @@ namespace Listings_Portal.BackgroundServices
         private SearchOptions Options => searchOptions.CurrentValue;
         private readonly JsonSerializerOptions serializeOptions = new JsonSerializerOptions() { WriteIndented = true };
 
+        [DisableConcurrentExecution(timeoutInSeconds: 300)]
         public async Task RunAsync(IJobCancellationToken jct)
         {
             var now = DateTime.UtcNow;
