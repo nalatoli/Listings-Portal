@@ -20,8 +20,8 @@ namespace Listings_Portal.Tests.Unit
                 .Excluding(r => r.Hoa!.Listing)
                 .Excluding(r => r.Hoa!.ListingId));
             result.Guid.Should().Be(data.Id);
-            result.Location.Y.Should().Be(data.Latitude);
             result.Location.X.Should().Be(data.Longitude);
+            result.Location.Y.Should().Be(data.Latitude);
         }
 
         [Fact]
@@ -40,8 +40,8 @@ namespace Listings_Portal.Tests.Unit
                 .Excluding(d => d.ListingAgent!.ListingId)
                 .Excluding(d => d.ListingOffice!.Listing)
                 .Excluding(d => d.ListingOffice!.ListingId));
-            data.Location.X.Should().Be(result.Latitude);
-            data.Location.Y.Should().Be(result.Longitude);
+            data.Location.X.Should().Be(result.Longitude);
+            data.Location.Y.Should().Be(result.Latitude);
         }
 
         [Fact]

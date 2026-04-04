@@ -10,8 +10,9 @@ using System.Text.Json;
 
 namespace Listings_Portal.BackgroundServices
 {
-    internal class PullBackgroundService(ILogger<PullBackgroundService> logger, IServiceProvider service, IOptionsMonitor<SearchOptions> searchOptions)
+    internal class PullBackgroundService(RentCastClient rcClient, ILogger<PullBackgroundService> logger, IServiceProvider service, IOptionsMonitor<SearchOptions> searchOptions)
     {
+        private readonly RentCastClient rcClient = rcClient;
         private readonly ILogger<PullBackgroundService> logger = logger;
         private readonly IServiceProvider service = service;
         private SearchOptions Options => searchOptions.CurrentValue;
@@ -22,12 +23,12 @@ namespace Listings_Portal.BackgroundServices
             var now = DateTime.UtcNow;
             logger.LogInformation("{DT}: Finding listings with options:\n{options}", now, JsonSerializer.Serialize(Options, serializeOptions));
 
-#if DEBUG
+#if !DEBUG
             await Task.CompletedTask;
 
 #else
 
-            var newCloudListings = await RentCast.GetRentListingsAsync(
+            var newCloudListings = await rcClient.GetRentListingsAsync(
                 propertyTypes: Options.PropertyTypes,
                 latitude: Options.Latitude,
                 longitude: Options.Longitude,

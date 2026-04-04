@@ -4,12 +4,14 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Listings_Portal.BackgroundServices;
 using Listings_Portal.Lib.Models.Api;
+using Listings_Portal.Lib.Tools.Cloud.RentCast;
 using Listings_Portal.Middleware;
 using Listings_Portal.Tools;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Net;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -21,6 +23,20 @@ public partial class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+          
+        /* Add pooled HTTP client */
+        builder.Services.AddHttpClient<RentCastClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.rentcast.io/v1/");
+            client.Timeout = TimeSpan.FromSeconds(100);
+            client.DefaultRequestHeaders.Add("X-Api-Key", RentCastClient.GetApiKey());
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        });
 
         /* Add services */
         builder.Services.AddDbContext<ListingsDbContext>(options => options.UseNpgsql(

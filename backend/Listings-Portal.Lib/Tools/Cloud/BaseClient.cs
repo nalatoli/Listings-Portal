@@ -1,36 +1,15 @@
 ﻿using Listings_Portal.Lib.Tools.Managers;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Json;
 
 namespace Listings_Portal.Lib.Tools.Cloud
 {
-    public abstract class BaseClient(string baseAddress) : IDisposable
+    public abstract class BaseClient(HttpClient client, ILogger logger)
     {
-        protected readonly HttpClient client = new HttpClient()
-        {
-            BaseAddress = new Uri(baseAddress)
-        };
-
-        #region IDisposable
-
-        private bool isDisposed;
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!isDisposed)
-            {
-                if (disposing)
-                    client.Dispose();
-
-                isDisposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
+        protected readonly HttpClient client = client;
+        protected readonly ILogger logger = logger;
 
         public async Task<T> Get<T>(string endpoint, string? query, CancellationToken cancellationToken = default)
         {
@@ -48,10 +27,43 @@ namespace Listings_Portal.Lib.Tools.Cloud
         }
 
 
-        protected Task<HttpResponseMessage> SendHttpGetResponseAsync(string endpoint, string? query, HttpMethod method, CancellationToken cancellationToken = default)
+        protected async Task<HttpResponseMessage> SendHttpGetResponseAsync(string endpoint, string? query, HttpMethod method, CancellationToken cancellationToken = default)
         {
-            string resource = $"{endpoint}{(string.IsNullOrEmpty(query) ? "" : $"?{query}")}";
-            return client.SendAsync(new HttpRequestMessage(method, resource), cancellationToken);
+            //string resource = $"{endpoint}{(string.IsNullOrEmpty(query) ? "" : $"?{query}")}";
+            //return client.SendAsync(new HttpRequestMessage(method, resource), cancellationToken);
+
+            var resource = $"{endpoint}{(string.IsNullOrEmpty(query) ? "" : $"?{query}")}";
+            using var request = new HttpRequestMessage(method, resource);
+
+            var sw = Stopwatch.StartNew();
+
+            try
+            {
+                logger.LogInformation("HTTP start {Method} {Resource}", method, resource);
+
+                var response = await client.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken);
+
+                logger.LogInformation(
+                    "HTTP headers received in {ElapsedMs} ms. Status={StatusCode}",
+                    sw.ElapsedMilliseconds,
+                    (int)response.StatusCode);
+
+                return response;
+            }
+            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                logger.LogError(
+                    ex,
+                    "HTTP timeout after {ElapsedMs} ms for {Method} {Resource}",
+                    sw.ElapsedMilliseconds,
+                    method,
+                    resource);
+
+                throw;
+            }
         }
 
         /// <summary>
@@ -70,7 +82,7 @@ namespace Listings_Portal.Lib.Tools.Cloud
         /// </summary>
         /// <param name="filename"> Filename for key file. </param>
         /// <return> API key. </return>
-        protected string GetApiKey(string filename)
+        protected static string GetApiKey(string filename)
         {
             return SecurityManager.Decrypt(File.ReadAllBytes(Path.Combine(Paths.BinDir, filename)));
         }
