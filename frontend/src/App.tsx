@@ -93,6 +93,37 @@ function parseFiltersFromSearch(search: string): Filters {
   };
 }
 
+function pin(bg: string, label: string, isDark: boolean, count = 1) {
+  return (
+    <div data-count={count} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }}>
+      <div
+        style={{
+          background: bg,
+          color: isDark ? "white" : "#111827",
+          border: "1.5px solid white",
+          borderRadius: 4,
+          padding: "2px 6px",
+          fontSize: 11,
+          fontWeight: 600,
+          whiteSpace: "nowrap",
+          boxShadow: "0 2px 4px rgba(0,0,0,.4)",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          width: 0,
+          height: 0,
+          borderLeft: "5px solid transparent",
+          borderRight: "5px solid transparent",
+          borderTop: `6px solid ${bg}`,
+        }}
+      />
+    </div>
+  );
+}
+
 function ClusteredMarkers({
   listings,
   isDark,
@@ -100,15 +131,54 @@ function ClusteredMarkers({
 }: {
   listings: Listing[];
   isDark: boolean;
-  onSelect: (l: Listing) => void;
+  onSelect: (group: Listing[]) => void;
 }) {
   const map = useMap();
   const clusterer = useRef<MarkerClusterer | null>(null);
   const markerRefs = useRef<Record<string, GMarker>>({});
 
+  // Group listings that share the same address into one marker
+  const groups = useMemo(() => {
+    const addrMap: Record<string, Listing[]> = {};
+    for (const l of listings) {
+      const key = `${l.addressLine1}|${l.city}|${l.state}`;
+      (addrMap[key] ??= []).push(l);
+    }
+    return Object.values(addrMap);
+  }, [listings]);
+
   useEffect(() => {
     if (!map) return;
-    clusterer.current = new MarkerClusterer({ map });
+    clusterer.current = new MarkerClusterer({
+      map,
+      renderer: {
+        render({ markers, position }) {
+          const total = (markers as google.maps.marker.AdvancedMarkerElement[]).reduce((sum, m) => {
+            const root = m.content as HTMLElement | null;
+            const el = root?.dataset?.count !== undefined
+              ? root
+              : root?.querySelector<HTMLElement>("[data-count]");
+            return sum + parseInt(el?.dataset?.count ?? "1");
+          }, 0);
+          const size = total < 10 ? 36 : total < 100 ? 42 : 50;
+          const div = document.createElement("div");
+          div.style.cssText = `
+            width:${size}px;height:${size}px;
+            background:#1d4ed8;
+            color:white;
+            border:2px solid white;
+            border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            font-size:${size < 42 ? 12 : 13}px;
+            font-weight:700;
+            box-shadow:0 2px 6px rgba(0,0,0,.45);
+            cursor:pointer;
+          `;
+          div.textContent = total > 999 ? "999+" : String(total);
+          return new google.maps.marker.AdvancedMarkerElement({ position, content: div });
+        },
+      },
+    });
     return () => {
       clusterer.current?.clearMarkers();
       clusterer.current = null;
@@ -125,36 +195,31 @@ function ClusteredMarkers({
     clusterer.current?.addMarkers(Object.values(markerRefs.current));
   }, []);
 
-  return listings.map((listing) => {
-    const hasYear = listing.yearBuilt !== -1;
-    const hasSqft = listing.squareFootage !== -1;
-    let bg = "#cad411";
-    if (hasYear && hasSqft) bg = "#EA4335";
-    else if (hasYear || hasSqft) bg = "#d49a11";
+  return groups.map((group) => {
+    const first = group[0];
+    const multi = group.length > 1;
+
+    let bg = "#7c3aed"; // purple for multi-unit
+    if (!multi) {
+      const hasYear = first.yearBuilt !== -1;
+      const hasSqft = first.squareFootage !== -1;
+      bg = "#cad411";
+      if (hasYear && hasSqft) bg = "#EA4335";
+      else if (hasYear || hasSqft) bg = "#d49a11";
+    }
+
+    const label = multi
+      ? `${group.length} units`
+      : `$${first.price}`;
 
     return (
       <AdvancedMarker
-        key={listing.id}
-        position={{ lat: listing.latitude, lng: listing.longitude }}
-        ref={(m) => setMarkerRef(m, String(listing.id))}
-        onClick={() => onSelect(listing)}
+        key={first.id}
+        position={{ lat: first.latitude, lng: first.longitude }}
+        ref={(m) => setMarkerRef(m, String(first.id))}
+        onClick={() => onSelect(group)}
       >
-        <div
-          style={{
-            background: bg,
-            color: isDark ? "white" : "#111827",
-            border: "1.5px solid white",
-            borderRadius: 4,
-            padding: "1px 5px",
-            fontSize: 11,
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-            boxShadow: "0 1px 3px rgba(0,0,0,.4)",
-            cursor: "pointer",
-          }}
-        >
-          ${listing.price}
-        </div>
+        {pin(bg, label, isDark, group.length)}
       </AdvancedMarker>
     );
   });
@@ -164,7 +229,7 @@ function ListingsMap() {
   const [isDark, setIsDark] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<Listing | null>(null);
+  const [selected, setSelected] = useState<Listing[] | null>(null);
   const [filters, setFilters] = useState<Filters>(() =>
     typeof window === "undefined"
       ? DEFAULTS
@@ -182,12 +247,8 @@ function ListingsMap() {
 
   const fmtInt = (n: number) => Math.round(n).toLocaleString();
   const fmtBaths = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(1));
-  const hasYear = selected?.yearBuilt !== -1;
-  const hasSqft = selected?.squareFootage !== -1;
-  const listedDate = new Date(selected?.listedDate ?? "");
-  const daysOld = Math.floor(
-    (Date.now() - listedDate.getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const daysOld = (l: Listing) =>
+    Math.floor((Date.now() - new Date(l.listedDate).getTime()) / 86_400_000);
 
   useEffect(() => {
     const onPop = () =>
@@ -269,64 +330,92 @@ function ListingsMap() {
           isDark={isDark}
           onSelect={setSelected}
         />
-        {selected && (
-          <InfoWindow
-            pixelOffset={[0, -28]}
-            position={{ lat: selected.latitude, lng: selected.longitude }}
-            onCloseClick={() => setSelected(null)}
-          >
-            <div style={{ minWidth: 220, lineHeight: 1.25, color: "black" }}>
-              {/* Price */}
-              <div
-                style={{
-                  fontWeight: 700,
-                  fontSize: 16,
-                  marginBottom: 6,
-                }}
-              >
-                ${fmtInt(selected.price)}
-              </div>
+        {selected && (() => {
+          const first = selected[0];
+          const multi = selected.length > 1;
+          return (
+            <InfoWindow
+              pixelOffset={[0, -28]}
+              position={{ lat: first.latitude, lng: first.longitude }}
+              onCloseClick={() => setSelected(null)}
+            >
+              <div style={{ minWidth: 220, lineHeight: 1.25, color: "black" }}>
+                {/* Address (always shown) */}
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>
+                  {first.addressLine1}, {first.city}, {first.state}
+                </div>
 
-              {/* Beds / Baths */}
-              <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 6 }}>
-                {selected.bedrooms} bd • {fmtBaths(selected.bathrooms)} ba
+                {multi ? (
+                  /* Multi-unit: one row per listing */
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {selected.map((l) => {
+                      const d = daysOld(l);
+                      return (
+                        <div key={l.id} style={{ borderTop: "1px solid #e5e7eb", paddingTop: 8 }}>
+                          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 3 }}>
+                            ${fmtInt(l.price)}
+                            {l.addressLine2 && (
+                              <span style={{ fontWeight: 400, fontSize: 12, marginLeft: 6, opacity: 0.7 }}>
+                                {l.addressLine2}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 12, opacity: 0.85, marginBottom: 5 }}>
+                            {l.bedrooms} bd • {fmtBaths(l.bathrooms)} ba
+                            {l.squareFootage !== -1 && <> • {fmtInt(l.squareFootage)} sqft</>}
+                            {" • "}
+                            {d === 0 ? "Today" : d === 1 ? "1 day ago" : `${d} days ago`}
+                          </div>
+                          <a
+                            href={`https://www.google.com/search?q=${encodeURI(l.guid)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: 12, textDecoration: "underline" }}
+                          >
+                            Google listing →
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Single listing */
+                  (() => {
+                    const l = first;
+                    const hasYear = l.yearBuilt !== -1;
+                    const hasSqft = l.squareFootage !== -1;
+                    const d = daysOld(l);
+                    return (
+                      <>
+                        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>
+                          ${fmtInt(l.price)}
+                        </div>
+                        <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 6 }}>
+                          {l.bedrooms} bd • {fmtBaths(l.bathrooms)} ba
+                        </div>
+                        <div style={{ fontSize: 12, opacity: 0.85, marginBottom: 10 }}>
+                          {hasYear && <>Built {l.yearBuilt}</>}
+                          {hasYear && hasSqft && " • "}
+                          {hasSqft && <>{fmtInt(l.squareFootage)} sqft</>}
+                          {(hasYear || hasSqft) && " • "}
+                          {d === 0 ? "Listed today" : d === 1 ? "Listed 1 day ago" : `Listed ${d} days ago`}
+                        </div>
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURI(l.guid)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ textDecoration: "underline" }}
+                        >
+                          Google listing →
+                        </a>
+                      </>
+                    );
+                  })()
+                )}
               </div>
-
-              {/* Address */}
-              <div style={{ marginBottom: 6 }}>
-                {selected.addressLine1}, {selected.city}, {selected.state}
-              </div>
-
-              {/* Meta row (Built year + Sqft + Days old) */}
-              <div style={{ fontSize: 12, opacity: 0.85, marginBottom: 10 }}>
-                {hasYear && <>Built {selected.yearBuilt}</>}
-                {hasYear && hasSqft && " • "}
-                {hasSqft && <>{fmtInt(selected.squareFootage)} sqft</>}
-                {(hasYear || hasSqft) && " • "}
-                {/* Always show days old */}
-                {daysOld === 0
-                  ? "Listed today"
-                  : daysOld === 1
-                    ? "Listed 1 day ago"
-                    : `Listed ${daysOld} days ago`}
-              </div>
-
-              {/* Link */}
-              <a
-                href={`https://www.google.com/search?q=${encodeURI(
-                  selected.guid,
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  textDecoration: "underline",
-                }}
-              >
-                Google listing →
-              </a>
-            </div>
-          </InfoWindow>
-        )}
+            </InfoWindow>
+          );
+        })()}
       </Map>
     </div>
   );
