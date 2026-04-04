@@ -1,9 +1,12 @@
 import {
-  Marker,
+  AdvancedMarker,
   APIProvider,
   Map,
   InfoWindow,
+  useMap,
 } from "@vis.gl/react-google-maps";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import type { Marker as GMarker } from "@googlemaps/markerclusterer";
 import {
   useCallback,
   useEffect,
@@ -69,10 +72,10 @@ function parseFiltersFromSearch(search: string): Filters {
         entries
           .flatMap((v) => (v ?? "").split(","))
           .map((s) => s.trim())
-          .filter(Boolean)
-      )
+          .filter(Boolean),
+      ),
     );
-    return list.length ? list : DEFAULTS.counties ?? null;
+    return list.length ? list : (DEFAULTS.counties ?? null);
   };
   return {
     minPrice: q.has("minPrice") ? toNum(q.get("minPrice")) : DEFAULTS.minPrice,
@@ -90,6 +93,73 @@ function parseFiltersFromSearch(search: string): Filters {
   };
 }
 
+function ClusteredMarkers({
+  listings,
+  isDark,
+  onSelect,
+}: {
+  listings: Listing[];
+  isDark: boolean;
+  onSelect: (l: Listing) => void;
+}) {
+  const map = useMap();
+  const clusterer = useRef<MarkerClusterer | null>(null);
+  const markerRefs = useRef<Record<string, GMarker>>({});
+
+  useEffect(() => {
+    if (!map) return;
+    clusterer.current = new MarkerClusterer({ map });
+    return () => {
+      clusterer.current?.clearMarkers();
+      clusterer.current = null;
+    };
+  }, [map]);
+
+  const setMarkerRef = useCallback((marker: GMarker | null, id: string) => {
+    if (marker) {
+      markerRefs.current[id] = marker;
+    } else {
+      delete markerRefs.current[id];
+    }
+    clusterer.current?.clearMarkers();
+    clusterer.current?.addMarkers(Object.values(markerRefs.current));
+  }, []);
+
+  return listings.map((listing) => {
+    const hasYear = listing.yearBuilt !== -1;
+    const hasSqft = listing.squareFootage !== -1;
+    let bg = "#cad411";
+    if (hasYear && hasSqft) bg = "#EA4335";
+    else if (hasYear || hasSqft) bg = "#d49a11";
+
+    return (
+      <AdvancedMarker
+        key={listing.id}
+        position={{ lat: listing.latitude, lng: listing.longitude }}
+        ref={(m) => setMarkerRef(m, String(listing.id))}
+        onClick={() => onSelect(listing)}
+      >
+        <div
+          style={{
+            background: bg,
+            color: isDark ? "white" : "#111827",
+            border: "1.5px solid white",
+            borderRadius: 4,
+            padding: "1px 5px",
+            fontSize: 11,
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+            boxShadow: "0 1px 3px rgba(0,0,0,.4)",
+            cursor: "pointer",
+          }}
+        >
+          ${listing.price}
+        </div>
+      </AdvancedMarker>
+    );
+  });
+}
+
 function ListingsMap() {
   const [isDark, setIsDark] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -98,14 +168,13 @@ function ListingsMap() {
   const [filters, setFilters] = useState<Filters>(() =>
     typeof window === "undefined"
       ? DEFAULTS
-      : parseFiltersFromSearch(window.location.search)
+      : parseFiltersFromSearch(window.location.search),
   );
   const visibleCount = useVisibleListingCount(listings);
 
   const listingApi = useMemo(() => listingsApi(), []);
   const lat = parseFloat(import.meta.env.VITE_DEFAULT_LATITUDE);
   const lng = parseFloat(import.meta.env.VITE_DEFAULT_LONGITUDE);
-  const handleClick = useCallback((l: Listing) => () => setSelected(l), []);
   const refetch = useRef<ReturnType<typeof setTimeout> | null>(null);
   const count = useMemo(() => listings.length, [listings]);
   const [filterBarHeight, setFilterBarHeight] = useState(0);
@@ -117,7 +186,7 @@ function ListingsMap() {
   const hasSqft = selected?.squareFootage !== -1;
   const listedDate = new Date(selected?.listedDate ?? "");
   const daysOld = Math.floor(
-    (Date.now() - listedDate.getTime()) / (1000 * 60 * 60 * 24)
+    (Date.now() - listedDate.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   useEffect(() => {
@@ -169,43 +238,7 @@ function ListingsMap() {
 
   const mapStyles = useMemo(
     () => (isDark ? nightModeMapStyles : null),
-    [isDark]
-  );
-
-  const markers = useMemo(
-    () =>
-      listings.map((listing) => {
-        const hasYear = listing.yearBuilt !== -1;
-        const hasSqft = listing.squareFootage !== -1;
-        let color = "#cad411";
-        if (hasYear && hasSqft) color = "#EA4335";
-        else if (hasYear || hasSqft) color = "#d49a11";
-
-        return (
-          <Marker
-            key={listing.id}
-            position={{ lat: listing.latitude, lng: listing.longitude }}
-            onClick={handleClick(listing)}
-            label={{
-              text: `$${listing.price}`,
-              fontSize: "12px",
-              color: isDark ? "white" : "#111827",
-              className: "price-label",
-            }}
-            icon={{
-              path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
-              fillColor: color,
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 1,
-              scale: 1.5,
-              anchor: new google.maps.Point(12, 24),
-              labelOrigin: new google.maps.Point(12, 9),
-            }}
-          />
-        );
-      }),
-    [listings, isDark, handleClick]
+    [isDark],
   );
 
   return (
@@ -222,6 +255,7 @@ function ListingsMap() {
       <Map
         style={{ width: "100vw", height: "100vh" }}
         styles={mapStyles}
+        mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID"}
         defaultCenter={{
           lat: lat,
           lng: lng,
@@ -230,7 +264,11 @@ function ListingsMap() {
         gestureHandling="greedy"
         disableDefaultUI
       >
-        {markers}
+        <ClusteredMarkers
+          listings={listings}
+          isDark={isDark}
+          onSelect={setSelected}
+        />
         {selected && (
           <InfoWindow
             pixelOffset={[0, -28]}
@@ -269,14 +307,14 @@ function ListingsMap() {
                 {daysOld === 0
                   ? "Listed today"
                   : daysOld === 1
-                  ? "Listed 1 day ago"
-                  : `Listed ${daysOld} days ago`}
+                    ? "Listed 1 day ago"
+                    : `Listed ${daysOld} days ago`}
               </div>
 
               {/* Link */}
               <a
                 href={`https://www.google.com/search?q=${encodeURI(
-                  selected.guid
+                  selected.guid,
                 )}`}
                 target="_blank"
                 rel="noreferrer"

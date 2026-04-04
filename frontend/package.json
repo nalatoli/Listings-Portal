@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@googlemaps/markerclusterer": "^2.6.2",
     "@vis.gl/react-google-maps": "^1.5.5",
+    "baseline-browser-mapping": "^2.10.14",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "zod": "^4.1.12"
