@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Npgsql;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -37,7 +38,14 @@ public partial class Program
             PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
             //AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.None
+            AutomaticDecompression = DecompressionMethods.None,
+            ConnectCallback = async (context, ct) =>
+            {
+                var addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, AddressFamily.InterNetwork, ct);
+                var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+                await socket.ConnectAsync(addresses[0], context.DnsEndPoint.Port, ct);
+                return new NetworkStream(socket, ownsSocket: true);
+            }
         });
 
         /* Add services */
