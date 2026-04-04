@@ -93,13 +93,22 @@ function parseFiltersFromSearch(search: string): Filters {
   };
 }
 
-function pin(bg: string, label: string, isDark: boolean, count = 1) {
+// Light-mode colors are darker so white text stays readable.
+// Dark-mode colors are brighter to pop against the dark map.
+const COLORS = {
+  basic:  { light: "#5a7a00", dark: "#cad411" },
+  partial:{ light: "#b45309", dark: "#d49a11" },
+  full:   { light: "#b91c1c", dark: "#EA4335" },
+  multi:  { light: "#6d28d9", dark: "#7c3aed" },
+} as const;
+
+function pin(bg: string, label: string, count = 1) {
   return (
     <div data-count={count} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }}>
       <div
         style={{
           background: bg,
-          color: isDark ? "white" : "#111827",
+          color: "white",
           border: "1.5px solid white",
           borderRadius: 4,
           padding: "2px 6px",
@@ -199,18 +208,14 @@ function ClusteredMarkers({
     const first = group[0];
     const multi = group.length > 1;
 
-    let bg = "#7c3aed"; // purple for multi-unit
+    let palette: keyof typeof COLORS = "multi";
     if (!multi) {
       const hasYear = first.yearBuilt !== -1;
       const hasSqft = first.squareFootage !== -1;
-      bg = "#cad411";
-      if (hasYear && hasSqft) bg = "#EA4335";
-      else if (hasYear || hasSqft) bg = "#d49a11";
+      palette = hasYear && hasSqft ? "full" : hasYear || hasSqft ? "partial" : "basic";
     }
-
-    const label = multi
-      ? `${group.length} units`
-      : `$${first.price}`;
+    const bg = isDark ? COLORS[palette].dark : COLORS[palette].light;
+    const label = multi ? `${group.length} units` : `$${first.price}`;
 
     return (
       <AdvancedMarker
@@ -219,7 +224,7 @@ function ClusteredMarkers({
         ref={(m) => setMarkerRef(m, String(first.id))}
         onClick={() => onSelect(group)}
       >
-        {pin(bg, label, isDark, group.length)}
+        {pin(bg, label, group.length)}
       </AdvancedMarker>
     );
   });
